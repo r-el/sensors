@@ -1,15 +1,53 @@
 ﻿using sensors.Entities;
+using sensors.Enums;
 
-Sensor[] sensors = [new("Temperature-Sensor-01", "Temperature"), new("Motion-Sensor-02", "Motion")];
+Console.WriteLine("=== Agent Detection Game ===");
+Console.WriteLine("Your mission: Find the agent's weaknesses!");
+Console.WriteLine();
 
-Console.WriteLine("Initial status:");
-for (int i = 0; i < sensors.Length; i++)
-    Console.WriteLine($"Sensor #{i + 1}: {sensors[i]}");
+IranianAgent agent = new(AgentRank.FootSoldier);
 
-Console.WriteLine("\n--- Activating sensors ---");
-sensors[0].Activate();
-sensors[1].Activate();
+Console.WriteLine($"Target: {agent}");
+Console.WriteLine($"You need to find {agent.Rank.RequiredSensors()} correct sensors to expose the agent.");
+Console.WriteLine();
 
-Console.WriteLine("\nStatus after activation:");
-for (int i = 0; i < sensors.Length; i++)
-    Console.WriteLine($"Sensor #{i + 1}: {sensors[i]}");
+SensorType[] availableTypes = [.. Enum.GetValues<SensorType>()];
+Console.WriteLine("Available sensor types:");
+
+foreach ((SensorType type, int idx) in availableTypes.Select((type, i) => (type, i + 1)))
+    Console.WriteLine($"{idx}. {type}");
+Console.WriteLine();
+
+while (!agent.IsExposed)
+{
+    Console.Write($"Choose a sensor type (1-{availableTypes.Length}): ");
+    string input = Console.ReadLine() ?? "";
+
+    Console.WriteLine(
+        int.TryParse(input, out int choice) && choice >= 1 && choice <= availableTypes.Length ?
+        ProcessSensorChoice(agent, availableTypes[choice - 1]) :
+        "Invalid choice. Please try again."
+    );
+
+    if (agent.IsExposed)
+    {
+        Console.WriteLine("\nCongratulations! You've exposed the agent!");
+        Console.WriteLine("Final activation:");
+        Console.WriteLine($"Total matching sensors: {agent.Activate()}");
+        break;
+    }
+
+    Console.WriteLine();
+}
+
+Console.WriteLine("\nGame Over! Press any key to exit...");
+Console.ReadKey();
+
+// Local function with file-scoped namespace and enhanced features
+static string ProcessSensorChoice(IranianAgent agent, SensorType selectedType)
+{
+    Sensor newSensor = new(selectedType.ToString());
+
+    Console.WriteLine($"\nAttaching {selectedType} sensor...");
+    return agent.AttachSensor(newSensor);
+}
