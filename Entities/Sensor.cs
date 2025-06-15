@@ -2,12 +2,12 @@ using sensors.Abstracts;
 
 namespace sensors.Entities
 {
-    public class Sensor(string name, string type) : BaseSensor(name, type)
+    public class Sensor(string type) : BaseSensor(type)
     {
         public override void Activate()
         {
             IsActive = true;
-            Console.WriteLine($"Activating sensor: {Name} (Type: {Type})");
+            Console.WriteLine($"Activating sensor: {Type}");
         }
 
         public override bool Equals(object? obj)
