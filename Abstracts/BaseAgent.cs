@@ -68,9 +68,16 @@ namespace sensors.Abstracts
             return matches;
         }
 
-        public override string ToString() =>
-            $"Agent [{Rank}]: {CountCorrectSensors()}/{Rank.RequiredSensors()} sensors" +
-            (IsExposed ? " - EXPOSED!" : "") +
-            $"\nAttached sensors: [{string.Join(", ", AttachedSensors)}]";
+        public override string ToString()
+        {
+            string agentType = GetType().Name;
+            string progress = $"{CountCorrectSensors()}/{Rank.RequiredSensors()} sensors";
+            string status = IsExposed ? "- EXPOSED!" : "";
+            string attachedSensors = AttachedSensors.Count > 0 
+                ? $"\nAttached Sensors:\n{string.Join("\n", AttachedSensors.Select(s => $"  • {s.Type}"))}"
+                : "No Attached Sensors";
+            
+            return $"{agentType} [{Rank}]: {progress} {status} {attachedSensors} ";
+        }
     }
 }
