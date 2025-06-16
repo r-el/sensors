@@ -31,6 +31,8 @@ namespace sensors.Abstracts
 
         public virtual string AttachSensor(Sensor sensor)
         {
+            Console.WriteLine($"\nAttaching {sensor.Type} sensor to {GetType().Name} [{Rank}]...");
+            
             if (IsExposed)
                 return "Agent is already exposed!";
 
