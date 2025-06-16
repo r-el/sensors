@@ -27,8 +27,5 @@ namespace sensors.Entities
             Console.WriteLine($"Iranian agent activated. Rank: {Rank}");
             return base.Activate();
         }
-
-        public override string ToString()
-            => $"Iranian Agent [{Rank}] - {(IsExposed ? "Exposed" : "Not Exposed")}";
     }
 }
