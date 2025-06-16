@@ -1,8 +1,9 @@
 using sensors.Abstracts;
+using sensors.Enums;
 
 namespace sensors.Entities
 {
-    public class Sensor(string type) : BaseSensor(type)
+    public class Sensor(SensorType type) : BaseSensor(type)
     {
         public override void Activate()
         {

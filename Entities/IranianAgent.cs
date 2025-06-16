@@ -18,7 +18,7 @@ namespace sensors.Entities
             for (int i = 0; i < targetCount; i++)
             {
                 SensorType weaknessType = availableTypes[rnd.Next(availableTypes.Length)];
-                SecretWeaknesses.Add(new Sensor(weaknessType.ToString()));
+                SecretWeaknesses.Add(new Sensor(weaknessType));
             }
         }
 
