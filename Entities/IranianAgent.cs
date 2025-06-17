@@ -5,7 +5,7 @@ namespace sensors.Entities
 {
     public class IranianAgent : BaseAgent
     {
-        public IranianAgent(AgentRank rank = AgentRank.FootSoldier) : base(SensorType.Audio, rank)
+        public IranianAgent(AgentRank rank = AgentRank.FootSoldier) : base(rank)
         { InitializeWeaknesses(); }
 
         private void InitializeWeaknesses()

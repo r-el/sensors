@@ -3,9 +3,8 @@ using sensors.Enums;
 
 namespace sensors.Abstracts
 {
-    public abstract class BaseAgent(SensorType sensorType, AgentRank rank)
+    public abstract class BaseAgent(AgentRank rank)
     {
-        public SensorType SensorType { get; set; } = sensorType;
         public AgentRank Rank { get; set; } = rank;
         public bool IsExposed { get; protected set; }
 
