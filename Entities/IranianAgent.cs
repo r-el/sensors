@@ -22,10 +22,10 @@ namespace sensors.Entities
             }
         }
 
-        public override int Activate()
+        public override int ActivateInactiveSensors()
         {
-            Console.WriteLine($"Iranian agent activated. Rank: {Rank}");
-            return base.Activate();
+            Console.WriteLine($"Activating remaining sensors on {Rank} agent...");
+            return base.ActivateInactiveSensors();
         }
     }
 }
