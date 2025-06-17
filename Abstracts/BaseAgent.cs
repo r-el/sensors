@@ -11,72 +11,85 @@ namespace sensors.Abstracts
         protected List<Sensor> SecretWeaknesses { get; set; } = [];
         protected List<Sensor> AttachedSensors { get; set; } = [];
 
-        public virtual int Activate()
+        public virtual int ActivateInactiveSensors()
         {
-            Console.WriteLine("Activating all attached sensors...");
+            List<Sensor> inactiveSensors = AttachedSensors.Where(s => !s.IsActive).ToList();
+            
+            if (inactiveSensors.Count == 0)
+            {
+                Console.WriteLine("All attached sensors are already active.");
+                return GetMatches().MatchCount;
+            }
 
-            // Activate all attached sensors
-            foreach (Sensor s in AttachedSensors)
-                s.Activate();
-
-            // Count and return matching sensors
-            int matchingCount = CountCorrectSensors();
-            int totalSensors = AttachedSensors.Count;
-
-            Console.WriteLine($"Sensors activated: {totalSensors}, Matching weaknesses: {matchingCount}");
-
-            return matchingCount;
+            // IEnumerable for Lazy evaluation
+            IEnumerable<string> activationResults = inactiveSensors
+                .Select(sensor => { sensor.Activate(); return sensor; })
+                .GroupBy(s => s.Type)
+                .Select(g => g.Count() > 1 ? $"{g.Key}×{g.Count()}" : g.Key.ToString());
+            
+            Console.WriteLine($"Activated: {string.Join(", ", activationResults)}");
+            
+            return GetMatches().MatchCount;
         }
 
-        public virtual string AttachSensor(Sensor sensor)
+        protected virtual (int MatchCount, List<Sensor> MatchedSensors) GetMatches()
+        {
+            Dictionary<SensorType, int> weaknessCount = [];
+            List<Sensor> matchedSensors = [];
+
+            foreach (Sensor weakness in SecretWeaknesses)
+                weaknessCount[weakness.Type] = weaknessCount.GetValueOrDefault(weakness.Type, 0) + 1;
+
+            foreach (Sensor attachedSensor in AttachedSensors)
+                if (weaknessCount.TryGetValue(attachedSensor.Type, out int count) && count > 0)
+                {
+                    weaknessCount[attachedSensor.Type] = count - 1;
+                    matchedSensors.Add(attachedSensor);
+                }
+
+            return (matchedSensors.Count, matchedSensors);
+        }
+
+        public virtual (int CurrentProgress, int RequiredProgress) GetProgress()
+        {
+            int currentProgress = GetMatches().MatchCount;
+            int requiredProgress = Rank.RequiredSensors();
+            return (currentProgress, requiredProgress);
+        }
+
+        public virtual AttachmentResult AttachSensor(Sensor sensor)
         {
             Console.WriteLine($"\nAttaching {sensor.Type} sensor to {GetType().Name} [{Rank}]...");
-            
+
             if (IsExposed)
-                return "Agent is already exposed!";
+                return AttachmentResult.AlreadyExposed;
 
             AttachedSensors.Add(sensor);
 
-            int correctCount = CountCorrectSensors();
+            int correctCount = GetMatches().MatchCount;
             int requiredCount = Rank.RequiredSensors();
 
             if (correctCount >= requiredCount)
             {
                 IsExposed = true;
-                return $"Well done! The agent has been exposed. ({correctCount}/{requiredCount})";
+                return AttachmentResult.AgentExposed;
             }
 
-            return $"Sensor attached. Progress: {correctCount}/{requiredCount}";
-        }
-
-        protected virtual int CountCorrectSensors()
-        {
-            List<Sensor> remainingWeaknesses = [.. SecretWeaknesses];
-            int matches = 0;
-
-            foreach (Sensor attachedSensor in AttachedSensors)
-            {
-                Sensor? matchingWeakness = remainingWeaknesses.FirstOrDefault(w => w.Equals(attachedSensor));
-                if (matchingWeakness != null)
-                {
-                    remainingWeaknesses.Remove(matchingWeakness);
-                    matches++;
-                }
-            }
-
-            return matches;
+            return AttachmentResult.Success;
         }
 
         public override string ToString()
         {
             string agentType = GetType().Name;
-            string progress = $"{CountCorrectSensors()}/{Rank.RequiredSensors()} sensors";
+            int correctCount = GetMatches().MatchCount;
+            string progress = $"{correctCount}/{Rank.RequiredSensors()}";
             string status = IsExposed ? "- EXPOSED!" : "";
-            string attachedSensors = AttachedSensors.Count > 0 
-                ? $"\nAttached Sensors:\n{string.Join("\n", AttachedSensors.Select(s => $"  • {s.Type}"))}"
-                : "No Attached Sensors";
-            
-            return $"{agentType} [{Rank}]: {progress} {status} {attachedSensors} ";
+            string attachedSensors = $"[{string.Join(", ", 
+                AttachedSensors
+                    .GroupBy(s => s.Type)
+                    .Select(g => g.Count() > 1 ? $"{g.Key}*{g.Count()}" : $"{g.Key}"))}]";
+
+            return $"{agentType} [{Rank}] - Progress: {progress} {status}\nAttached Sensors: {attachedSensors}";
         }
     }
 }
