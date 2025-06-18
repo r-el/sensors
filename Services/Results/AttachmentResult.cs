@@ -1,4 +1,6 @@
-namespace sensors.Enums
+using System;
+
+namespace sensors.Services.Results
 {
     public enum AttachmentResult
     {

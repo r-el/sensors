@@ -1,7 +1,8 @@
-using sensors.Abstracts;
-using sensors.Enums;
+using System;
+using sensors.Core.Enums;
+using sensors.Services.Factories;
 
-namespace sensors.Entities
+namespace sensors.Core.Agents
 {
     public class IranianAgent : BaseAgent
     {
@@ -18,7 +19,7 @@ namespace sensors.Entities
             for (int i = 0; i < targetCount; i++)
             {
                 SensorType weaknessType = availableTypes[rnd.Next(availableTypes.Length)];
-                SecretWeaknesses.Add(new Sensor(weaknessType));
+                SecretWeaknesses.Add(SensorFactory.CreateSensor(weaknessType));
             }
         }
 
