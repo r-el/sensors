@@ -1,7 +1,7 @@
-using sensors.Abstracts;
-using sensors.Enums;
 
-namespace sensors.Entities
+using sensors.Core.Enums;
+
+namespace sensors.Core.Sensors
 {
     public class Sensor(SensorType type) : BaseSensor(type)
     {

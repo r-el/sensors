@@ -1,4 +1,6 @@
-namespace sensors.Enums
+using System;
+
+namespace sensors.Core.Enums
 {
     public enum SensorType
     {

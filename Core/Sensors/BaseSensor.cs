@@ -1,6 +1,6 @@
-using sensors.Enums;
+using sensors.Core.Enums;
 
-namespace sensors.Abstracts
+namespace sensors.Core.Sensors
 {
     public abstract class BaseSensor(SensorType type)
     {

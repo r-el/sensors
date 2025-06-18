@@ -1,19 +1,23 @@
-using sensors.Entities;
-using sensors.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using sensors.Core.Enums;
+using sensors.Core.Sensors;
+using sensors.Services.Results;
 
-namespace sensors.Abstracts
+namespace sensors.Core.Agents
 {
     public abstract class BaseAgent(AgentRank rank)
     {
         public AgentRank Rank { get; set; } = rank;
         public bool IsExposed { get; protected set; }
 
-        protected List<Sensor> SecretWeaknesses { get; set; } = [];
-        protected List<Sensor> AttachedSensors { get; set; } = [];
+        protected List<BaseSensor> SecretWeaknesses { get; set; } = [];
+        protected List<BaseSensor> AttachedSensors { get; set; } = [];
 
         public virtual int ActivateInactiveSensors()
         {
-            List<Sensor> inactiveSensors = AttachedSensors.Where(s => !s.IsActive).ToList();
+            List<BaseSensor> inactiveSensors = AttachedSensors.Where(s => !s.IsActive).ToList();
             
             if (inactiveSensors.Count == 0)
             {
@@ -32,15 +36,15 @@ namespace sensors.Abstracts
             return GetMatches().MatchCount;
         }
 
-        protected virtual (int MatchCount, List<Sensor> MatchedSensors) GetMatches()
+        protected virtual (int MatchCount, List<BaseSensor> MatchedSensors) GetMatches()
         {
             Dictionary<SensorType, int> weaknessCount = [];
-            List<Sensor> matchedSensors = [];
+            List<BaseSensor> matchedSensors = [];
 
-            foreach (Sensor weakness in SecretWeaknesses)
+            foreach (BaseSensor weakness in SecretWeaknesses)
                 weaknessCount[weakness.Type] = weaknessCount.GetValueOrDefault(weakness.Type, 0) + 1;
 
-            foreach (Sensor attachedSensor in AttachedSensors)
+            foreach (BaseSensor attachedSensor in AttachedSensors)
                 if (weaknessCount.TryGetValue(attachedSensor.Type, out int count) && count > 0)
                 {
                     weaknessCount[attachedSensor.Type] = count - 1;
@@ -57,7 +61,7 @@ namespace sensors.Abstracts
             return (currentProgress, requiredProgress);
         }
 
-        public virtual AttachmentResult AttachSensor(Sensor sensor)
+        public virtual AttachmentResult AttachSensor(BaseSensor sensor)
         {
             Console.WriteLine($"\nAttaching {sensor.Type} sensor to {GetType().Name} [{Rank}]...");
 

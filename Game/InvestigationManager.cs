@@ -1,6 +1,8 @@
-using sensors.Abstracts;
-using sensors.Entities;
-using sensors.Enums;
+using sensors.Core.Agents;
+using sensors.Core.Enums;
+using sensors.Core.Sensors;
+using sensors.Services.Results;
+using sensors.Services.Factories;
 
 namespace sensors.Game
 {
