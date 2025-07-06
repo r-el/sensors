@@ -1,0 +1,48 @@
+Sensors/
+├── src/
+│   ├── Models/                         # מודלים/אנטיטיס
+│   │   ├── Agents/                     # סוכנים
+│   │   │   ├── Agent.cs                # מחלקת Agent כללית
+│   │   │   ├── FootSoldier.cs          # סוכן זוטר (2 סנסורים)
+│   │   │   ├── OrganizationLeader.cs   # ראש ארגון (סוכן בכיר)
+│   │   │   ├── SeniorCommander.cs      # מפקד בכיר (סוכן בכיר)
+│   │   │   └── SquadLeader.cs          # מפקד חוליה (4 סנסורים + התקפת נגד)
+│   │   ├── Sensors/                    # סנסורים
+│   │   │   ├── AudioSensor.cs          # סנסור אודיו בסיסי
+│   │   │   ├── LightSensor.cs          # סנסור אור (חושף מידע מתקדם)
+│   │   │   ├── MagneticSensor.cs       # סנסור מגנטי (מונע התקפות נגד)
+│   │   │   ├── MotionSensor.cs         # סנסור תנועה (נשבר אחרי 3 הפעלות)
+│   │   │   ├── PulseSensor.cs          # סנסור דופק (נשבר אחרי 3 הפעלות)
+│   │   │   ├── Sensor.cs               # מחלקת Sensor כללית
+│   │   │   ├── SensorExtensions.cs     # הרחבות לסנסורים
+│   │   │   ├── SignalSensor.cs         # סנסור אותות (חושף מידע על הסוכן)
+│   │   │   └── ThermalSensor.cs        # סנסור תרמי (חושף סנסור אחד)
+│   │   └── Player/                     # שחקן
+│   │       └── Player.cs               # מידע על השחקן (להישגים ושמירה)
+│   ├── Interfaces/                     # הגדרת חוזים להתנהגויות
+│   │   ├── IBreakable.cs               # ממשק לסנסורים שנשברים
+│   │   ├── ICounterattack.cs           # יכולת התקפת נגד לסוכנים בכירים
+│   │   ├── ICounterattackBlocker.cs    # ממשק לסנסורים שחוסמים התקפות נגד
+│   │   ├── IReveal.cs                  # ממשק לחשיפת מידע
+│   │   └── ISensorEffect.cs            # אפקטים מיוחדים של סנסורים
+│   ├── Services/                       # שירותים ולוגיקה עסקית
+│   │   ├── DatabaseService.cs          # שירות חיבור ל-MySQL
+│   │   ├── GameManager.cs              # ניהול מהלך המשחק
+│   │   ├── InvestigationManager.cs     # ניהול תהליך החקירה
+│   │   ├── PlayerManager.cs            # ניהול שחקנים והישגים
+│   │   ├── RandomizationService.cs     # שירות רנדומיזציה
+│   │   └── Factories/                  # יצרנים
+│   │       ├── SensorFactory.cs        # יצירת סנסורים מסוגים שונים
+│   │       └── AgentFactory.cs         # יצירת סוכנים מדרגות שונות
+│   ├── Types/                          # הגדרות טיפוסים
+│   │   ├── Enums/                      # מספרים
+│   │   │   ├── AgentRank.cs            # דרגות סוכנים
+│   │   │   └── SensorType.cs           # סוגי סנסורים
+│   │   ├── Results/                    # אובייקטי תוצאה
+│   │   │   ├── AttachmentResult.cs     # תוצאת הפעלת סנסור
+│   │   │   └── MatchResult.cs          # תוצאת התאמה
+│   │   ├── Constants.cs                # קבועים למשחק
+│   │   └── GameState.cs                # מייצג את מצב המשחק הנוכחי
+│   └── UI/                             # ממשק משתמש
+│       └── UserInterface.cs            # ממשק משתמש טקסטואלי
+└── Program.cs                          # נקודת הכניסה לתוכנית
