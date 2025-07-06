@@ -1,25 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using sensors.src.Types.Enums;
-using sensors.src.Models.Sensors;
-using sensors.src.Services.Factories;
-using sensors.src.Interfaces;
 using sensors.src.Services;
 
 namespace sensors.src.Models.Agents
 {
-    public class SquadLeader : CounterattackAgent
+    public class SquadLeader(List<SensorType>? predefinedWeaknesses = null) 
+        : CounterattackAgent(AgentRank.SquadLeader, 4, predefinedWeaknesses ?? RandomizationService.GenerateBalancedWeaknesses(4, true))
     {
-        public SquadLeader() : base(AgentRank.SquadLeader, 4)
-        {
-        }
-
-        protected override void InitializeWeaknesses()
-        {
-            // Use balanced weaknesses for more challenging gameplay
-            SecretWeaknesses = RandomizationService.GenerateBalancedWeaknesses(RequiredSensorCount, true);
-        }
 
         protected override bool CheckCounterattackCondition(int turnNumber)
         {

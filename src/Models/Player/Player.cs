@@ -7,22 +7,13 @@ namespace sensors.src.Models.Player
     /// Represents a player in the investigation game.
     /// Stores player progress and achievements.
     /// </summary>
-    public class Player
+    public class Player(string name, int gamesPlayed = 0, int gamesWon = 0, AgentRank? highestRankDefeated = AgentRank.FootSoldier, DateTime? lastPlayed = null)
     {
-        public string Name { get; set; }
-        public int GamesPlayed { get; set; }
-        public int GamesWon { get; set; }
-        public AgentRank? HighestRankDefeated { get; set; }
-        public DateTime LastPlayed { get; set; }
-        
-        public Player(string name)
-        {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            GamesPlayed = 0;
-            GamesWon = 0;
-            HighestRankDefeated = null;
-            LastPlayed = DateTime.Now;
-        }
+        public string Name { get; set; } = name ?? throw new ArgumentNullException(nameof(name));
+        public int GamesPlayed { get; set; } = gamesPlayed;
+        public int GamesWon { get; set; } = gamesWon;
+        public AgentRank? HighestRankDefeated { get; set; } = highestRankDefeated;
+        public DateTime LastPlayed { get; set; } = lastPlayed ?? DateTime.Now;
 
         public double WinRate => GamesPlayed > 0 ? (double)GamesWon / GamesPlayed * 100 : 0;
 
@@ -30,9 +21,7 @@ namespace sensors.src.Models.Player
         {
             GamesWon++;
             if (HighestRankDefeated == null || defeatedRank > HighestRankDefeated)
-            {
                 HighestRankDefeated = defeatedRank;
-            }
             LastPlayed = DateTime.Now;
         }
 
@@ -43,9 +32,6 @@ namespace sensors.src.Models.Player
         }
 
         public override string ToString()
-        {
-            string highestRank = HighestRankDefeated?.ToString() ?? "None";
-            return $"Player: {Name} | Games: {GamesPlayed} | Wins: {GamesWon} | Win Rate: {WinRate:F1}% | Highest Rank Defeated: {highestRank}";
-        }
+            => $"Player: {Name} | Games: {GamesPlayed} | Wins: {GamesWon} | Win Rate: {WinRate:F1}% | Highest Rank Defeated: {HighestRankDefeated?.ToString() ?? "None"}"; 
     }
 }

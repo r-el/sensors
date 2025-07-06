@@ -13,14 +13,6 @@ namespace sensors.src.Models.Sensors
             Type = SensorType.Thermal;
         }
 
-        // Activates the thermal sensor on the given agent and reveals a weakness
-        public override bool Activate(Agent agent)
-        {
-            SensorType? revealedWeakness = RevealInformation(agent);
-            Console.WriteLine($"Thermal sensor activated, revealed: {revealedWeakness}");
-            return true; // ThermalSensor always succeeds
-        }
-
         public SensorType? RevealInformation(Agent agent)
         {
             SensorType weakness = agent.RevealOneWeakness();

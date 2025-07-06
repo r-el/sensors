@@ -2,6 +2,7 @@ using System;
 using sensors.src.Types.Enums;
 using sensors.src.Interfaces;
 using sensors.src.Models.Agents;
+using sensors.src.Types.Results;
 
 namespace sensors.src.Models.Sensors
 {
@@ -18,15 +19,23 @@ namespace sensors.src.Models.Sensors
         }
 
         // Activates the motion sensor on the given agent
-        public override bool Activate(Agent agent)
+        public override int Activate(Agent agent)
         {
             if (IsBroken)
             {
                 Console.WriteLine("Motion sensor is broken and cannot be activated!");
-                return false;
+                return 0; // Return 0 matches if broken
             }
+            
+            Console.WriteLine($"Motion sensor activated - usage {UsageCount + 1}/{MaxUsages}");
+            
+            // First attach the sensor using base implementation
+            int matchCount = base.Activate(agent);
+            
+            // Handle usage tracking
             HandleUsage();
-            return true;
+            
+            return matchCount;
         }
 
         public void HandleUsage()

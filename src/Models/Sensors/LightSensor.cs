@@ -1,6 +1,6 @@
+using sensors.src.Types.Enums;
 using sensors.src.Interfaces;
 using sensors.src.Models.Agents;
-using sensors.src.Types.Enums;
 
 namespace sensors.src.Models.Sensors
 {
@@ -11,18 +11,11 @@ namespace sensors.src.Models.Sensors
         {
             Type = SensorType.Light;
         }
+        
         // Reveals two raw fields (rank and affiliation) about the agent
         public (AgentRank, string) RevealFields(Agent agent)
         {
             return (agent.Rank, agent.Affiliation);
-        }
-        // Activates the light sensor on the given agent
-        public override bool Activate(Agent agent)
-        {
-            (AgentRank rank, string affiliation) = RevealFields(agent);
-            Console.WriteLine($"Agent rank: {rank}");
-            Console.WriteLine($"Affiliation: {affiliation}");
-            return true;
         }
     }
 }

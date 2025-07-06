@@ -1,5 +1,3 @@
-using sensors.src.Models.Agents;
-
 namespace sensors.src.Interfaces
 {
     // Interface for sensors that can break after several uses

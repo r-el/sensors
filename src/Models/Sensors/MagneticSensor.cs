@@ -2,6 +2,7 @@ using System;
 using sensors.src.Interfaces;
 using sensors.src.Models.Agents;
 using sensors.src.Types.Enums;
+using sensors.src.Types.Results;
 
 namespace sensors.src.Models.Sensors
 {
@@ -55,29 +56,8 @@ namespace sensors.src.Models.Sensors
         }
 
         /// <summary>
-        /// Activates the magnetic sensor on the given agent
+        /// MagneticSensor uses base implementation - special effects are handled automatically
         /// </summary>
-        public override bool Activate(Agent agent)
-        {
-            if (agent is ICounterattack counterattacker && IsBlockingCounterattack())
-            {
-                BlockCounterattack(counterattacker);
-                return true;
-            }
-            
-            if (_blockCount >= _maxBlocks)
-            {
-                Console.WriteLine("⚠️ Magnetic sensor is depleted and can no longer block counterattacks.");
-            }
-            else
-            {
-                Console.WriteLine("ℹ️ Magnetic sensor activated, but agent has no counterattack ability.");
-            }
-            
-            return true; // Still considered successful activation
-        }
-
-        /// <summary>
         /// String representation showing remaining blocks
         /// </summary>
         public override string ToString()

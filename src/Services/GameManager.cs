@@ -1,8 +1,7 @@
 using System;
-using System.Linq;
 using sensors.src.Models.Agents;
+using sensors.src.Models.Player;
 using sensors.src.Types.Enums;
-using sensors.src.Models.Sensors;
 using sensors.src.Services.Factories;
 using sensors.src.Types.Results;
 using sensors.src.UI;
@@ -11,282 +10,135 @@ using sensors.src.Interfaces;
 namespace sensors.src.Services
 {
     /// <summary>
-    /// Controls the game flow and coordinates between UI and game state.
+    /// Main game controller that orchestrates the investigation process
     /// </summary>
     public class GameManager
     {
-        private Agent? _currentAgent;
-        private bool _gameRunning;
-        private Sensor[] _sensors = null!;
-        private int _currentTurn = 0; // Track current turn for better counterattack management
         private readonly PlayerManager _playerManager;
+        private readonly InvestigationManager _investigationManager;
+        private int _currentTurn;
 
         public GameManager(PlayerManager playerManager)
         {
             _playerManager = playerManager ?? throw new ArgumentNullException(nameof(playerManager));
-            _gameRunning = false;
-            InitializeSensors();
-        }
-
-        private void InitializeSensors()
-        {
-            _sensors =
-            [
-                new AudioSensor(),      // SensorType.Audio = 1
-                new ThermalSensor(),    // SensorType.Thermal = 2
-                new PulseSensor(),      // SensorType.Pulse = 3
-                new MotionSensor(),     // SensorType.Motion = 4
-                new MagneticSensor(),   // SensorType.Magnetic = 5
-                new SignalSensor(),     // SensorType.Signal = 6
-                new LightSensor()       // SensorType.Light = 7
-            ];
+            _investigationManager = new InvestigationManager();
+            _currentTurn = 0;
         }
 
         /// <summary>
-        /// Main game loop - coordinates the entire investigation process.
-        /// Returns true if player wants to continue to next agent, false if they want to quit.
+        /// Get current turn number
+        /// </summary>
+        public int GetCurrentTurn() => _currentTurn;
+
+        /// <summary>
+        /// Start a new investigation session
         /// </summary>
         public bool StartInvestigation()
         {
-            UserInterface.ShowWelcomeMessage();
-            
-            // Reset sensors for new investigation
-            ResetSensors();
-            
-            SetupAgent();
-            
-            if (_currentAgent != null)
+            // Get current player
+            var player = _playerManager.GetCurrentPlayer();
+            if (player == null)
             {
-                UserInterface.ShowTargetInfo(_currentAgent);
-                UserInterface.WaitForKeyPress();
-                return RunGameLoop();
-            }
-            
-            return false;
-        }
-
-        private void SetupAgent()
-        {
-            AgentRank selectedRank = UserInterface.SelectAgentRank(_playerManager);
-            _currentAgent = AgentFactory.CreateAgent(selectedRank);
-            UserInterface.ShowMessage($"Iranian {selectedRank} agent captured and ready for investigation!");
-            
-            // Record game start
-            _playerManager.RecordGameStart();
-            
-            UserInterface.WaitForKeyPress();
-        }
-
-        private bool RunGameLoop()
-        {
-            if (_currentAgent == null) return false;
-
-            _gameRunning = true;
-            _currentTurn = 0; // Reset turn counter for new investigation
-            
-            while (_gameRunning && !_currentAgent.IsExposed)
-            {
-                // Clear screen before showing new turn
-                UserInterface.ClearScreen();
-                
-                // Show turn information and warnings (showing current turn + 1 for next action)
-                UserInterface.ShowTurnInfo(_currentTurn + 1); // Show next turn number
-                ShowCounterAttackWarnings();
-                
-                UserInterface.ShowInvestigationScreen(_currentAgent, this);
-                ProcessPlayerInput(); // Turn increment is handled inside AttachAndActivateSensorByChoice
+                SpectreUI.ShowGameResult(false, null!, _playerManager);
+                return false;
             }
 
-            if (_currentAgent.IsExposed)
-            {
-                UserInterface.ShowVictoryMessage(_currentAgent);
-                
-                // Record victory in player manager
-                _playerManager.RecordVictory(_currentAgent.Rank);
-                
-                // Show updated player stats
-                _playerManager.ShowPlayerStats();
-                
-                // Ask if player wants to continue to next agent
-                return UserInterface.AskContinueToNextAgent(_playerManager);
-            }
+            // Let player select target agent
+            AgentRank selectedRank = SpectreUI.ShowAgentSelectionMenu(_playerManager);
+            if (selectedRank == AgentRank.None)
+                return false;
+
+            // Create target agent
+            Agent targetAgent = AgentFactory.CreateAgent(selectedRank);
             
-            UserInterface.ShowMessage("Investigation ended.");
-            UserInterface.WaitForKeyPress();
-            return false;
+            // Initialize investigation (without player - GameManager handles player)
+            _investigationManager.InitializeInvestigation(targetAgent);
+            
+            // Show mission briefing
+            SpectreUI.ShowTargetBriefing(targetAgent);
+            
+            // Run investigation loop
+            bool investigationResult = RunInvestigationLoop();
+            
+            // Update player statistics (GameManager responsibility)
+            UpdatePlayerStatistics(player, targetAgent, investigationResult);
+            
+            // Show final results
+            SpectreUI.ShowGameResult(investigationResult, targetAgent, _playerManager);
+            
+            return true;
         }
 
         /// <summary>
-        /// Shows warnings about potential counterattacks
+        /// Main investigation loop
         /// </summary>
-        private void ShowCounterAttackWarnings()
+        private bool RunInvestigationLoop()
         {
-            if (_currentAgent is ICounterattack counterattacker)
-            {
-                int nextTurn = _currentTurn + 1; // Check for next turn warnings
-                
-                // Check for regular counterattack
-                if (_currentAgent.Rank.AttackRate() > 0 && nextTurn % _currentAgent.Rank.AttackRate() == 0)
-                {
-                    UserInterface.ShowWarning($"⚠️ Warning: {_currentAgent.Rank} agent may counterattack this turn!");
-                }
-                
-                // Check for special ability (OrganizationLeader)
-                if (_currentAgent.Rank == AgentRank.OrganizationLeader && nextTurn % 10 == 0)
-                {
-                    UserInterface.ShowWarning($"🚨🚨 CRITICAL: Agent may use devastating special ability! 🚨🚨");
-                }
-            }
-        }
-
-        private bool ProcessPlayerInput()
-        {
-            if (_currentAgent == null) return false;
-
-            string input = Console.ReadLine()?.Trim().ToUpper() ?? "";
+            // Reset turn counter for new investigation
+            _currentTurn = 0;
             
-            switch (input)
+            while (!_investigationManager.IsInvestigationComplete())
             {
-                case "S":
-                    UserInterface.ShowDetailedStatus(_currentAgent);
-                    return false; // No turn advancement for status
-                case "H":
-                    UserInterface.ShowSensorHelp();
-                    return false; // No turn advancement for help
-                case "Q":
-                    _gameRunning = false;
-                    UserInterface.ShowMessage("Quitting investigation.");
-                    return false; // No turn advancement for quit
-                default:
-                    if (int.TryParse(input, out int sensorChoice))
-                    {
-                        return AttachAndActivateSensorByChoice(sensorChoice);
-                    }
-                    else
-                    {
-                        UserInterface.ShowError("Invalid command.");
-                        return false; // No turn advancement for invalid input
-                    }
-            }
-        }
+                var agent = _investigationManager.GetIranianAgent();
+                if (agent == null) break;
 
-        private bool AttachAndActivateSensorByChoice(int choice)
-        {
-            if (_currentAgent == null) return false;
-
-            // Get all valid sensor types
-            SensorType[] availableTypes = Enum.GetValues<SensorType>()
-                .Where(type => type != SensorType.None)
-                .ToArray();
-            
-            if (choice >= 1 && choice <= availableTypes.Length)
-            {
-                SensorType selectedType = availableTypes[choice - 1];
+                // Show sensor selection menu with current turn
+                SensorType selectedSensor = SpectreUI.ShowSensorSelectionMenu(
+                    agent, this, _currentTurn);
                 
-                // Convert enum to array index
-                int index = (int)selectedType - 1;
+                if (selectedSensor == SensorType.None)
+                    return false; // Player chose to exit
                 
-                // Check bounds
-                if (index < 0 || index >= _sensors.Length)
-                {
-                    UserInterface.ShowError("Invalid sensor type!");
-                    return false;
-                }
-                
-                // Get sensor from array
-                Sensor sensor = _sensors[index];
-                
-                // Check if sensor is broken
-                if (sensor is IBreakable breakable && breakable.IsBroken)
-                {
-                    UserInterface.ShowError($"The {selectedType} sensor is broken and can't be used!");
-                    return false;
-                }
-                
-                // Increment turn before processing
+                // Increment turn counter
                 _currentTurn++;
                 
-                // Handle counterattack BEFORE sensor attachment
-                HandleCounterattack();
+                // Deploy sensor with current turn number
+                AttachmentResult result = _investigationManager.DeploySensor(selectedSensor, _currentTurn);
                 
-                // Attach and activate sensor with current turn information
-                AttachmentResult result = sensor.ActivateOn(_currentAgent, _currentTurn);
+                // Handle counterattacks based on current turn
+                HandleCounterattack(agent);
                 
-                // Show sensor activation results
-                UserInterface.ShowActivationResult(result, _currentAgent);
-                
-                // Single wait for user to read all results
-                UserInterface.WaitForKeyPress();
-                
-                return true; // Success
+                // Show results
+                SpectreUI.ShowActivationResult(result, agent);
             }
-            else
-            {
-                UserInterface.ShowError($"Invalid sensor choice. Please select 1-{availableTypes.Length}");
-                return false; // Failed
-            }
+            
+            return _investigationManager.IsInvestigationComplete();
         }
 
         /// <summary>
-        /// Returns sensor availability information with emoji and clear usage format
+        /// Handle agent counterattacks based on current turn
         /// </summary>
-        public string GetSensorAvailabilityInfo(SensorType type)
+        private void HandleCounterattack(Agent agent)
         {
-            int index = (int)type - 1;
-            if (index < 0 || index >= _sensors.Length)
-                return "";
-                
-            Sensor sensor = _sensors[index];
-            
-            // Check for magnetic sensor block count
-            if (sensor is MagneticSensor magneticSensor)
+            if (agent is ICounterattack counterAgent)
             {
-                int remaining = magneticSensor.MaxBlocks - magneticSensor.BlockCount;
-                return $" ({remaining} blocks left)";
-            }
-            
-            // If it's a breakable sensor, check its status
-            if (sensor is IBreakable breakable)
-            {
-                if (breakable.IsBroken)
-                    return " [💥 BROKEN]";
-                else
+                // Use GameManager's turn counter for counterattack logic
+                if (counterAgent.ShouldPerformCounterattack(_currentTurn))
                 {
-                    int remaining = breakable.MaxUsages - breakable.UsageCount;
-                    return $" ({remaining} uses left)";
+                    counterAgent.PerformCounterattack(_currentTurn);
+                    
+                    // Show counterattack result
+                    SpectreUI.ShowCounterattackResult(agent, "Agent performed counterattack!", 1);
                 }
-            }
-            
-            return ""; // Regular sensor - always available
-        }
-
-        /// <summary>
-        /// Handles counterattack and updates the display with current progress
-        /// </summary>
-        private void HandleCounterattack()
-        {
-            if (_currentAgent is ICounterattack counterAgent && 
-                counterAgent.ShouldPerformCounterattack(_currentTurn))
-            {
-                // Perform counterattack
-                counterAgent.PerformCounterattack(_currentTurn);
                 
-                // Show immediate feedback about counterattack
-                UserInterface.ShowWarning("🔴 Agent performed a counterattack!");
-                
-                // Reset counterattack state
+                // Reset counterattack state for next turn
                 counterAgent.ResetCounterattackState();
-                
-                // Note: Progress will be shown in next turn's investigation screen
             }
         }
 
         /// <summary>
-        /// Resets all sensors to their initial state for a new investigation
+        /// Update player statistics after investigation completion
         /// </summary>
-        private void ResetSensors()
+        private void UpdatePlayerStatistics(sensors.src.Models.Player.Player player, Agent agent, bool wasSuccessful)
         {
-            InitializeSensors();
+            // Always record that a game was played
+            player.RecordGame();
+            
+            // If successful, record victory with agent rank
+            if (wasSuccessful)
+            {
+                player.RecordVictory(agent.Rank);
+            }
         }
     }
 }

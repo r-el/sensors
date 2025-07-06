@@ -31,7 +31,7 @@ namespace sensors.src.Types
             if (Agent == null)
                 return (0, 0);
                 
-            return Agent.GetProgress();
+            return Agent.GetSmartProgress();
         }
 
         public void ExitGame()

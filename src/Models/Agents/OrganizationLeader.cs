@@ -1,25 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using sensors.src.Types.Enums;
-using sensors.src.Models.Sensors;
-using sensors.src.Services.Factories;
-using sensors.src.Interfaces;
 using sensors.src.Services;
 
 namespace sensors.src.Models.Agents
 {
-    public class OrganizationLeader : CounterattackAgent
+    public class OrganizationLeader(List<SensorType>? predefinedWeaknesses = null) 
+        : CounterattackAgent(AgentRank.OrganizationLeader, 8, predefinedWeaknesses ?? RandomizationService.GenerateBalancedWeaknesses(8, true))
     {
-        public OrganizationLeader() : base(AgentRank.OrganizationLeader, 8)
-        {
-        }
-
-        protected override void InitializeWeaknesses()
-        {
-            // Use most advanced weaknesses for maximum challenge
-            SecretWeaknesses = RandomizationService.GenerateBalancedWeaknesses(RequiredSensorCount, true);
-        }
 
         protected override bool CheckCounterattackCondition(int turnNumber)
         {
@@ -60,9 +46,9 @@ namespace sensors.src.Models.Agents
             // Clear all attached sensors
             AttachedSensors.Clear();
             
-            // Reset weakness list
-            ResetMatchingState();
-            InitializeWeaknesses();
+            // Reset exposure state and generate new weaknesses
+            IsExposed = false;
+            SecretWeaknesses = RandomizationService.GenerateBalancedWeaknesses(SensorSlots, true);
             
             Console.WriteLine("   🔄 Generated new weakness pattern!");
         }

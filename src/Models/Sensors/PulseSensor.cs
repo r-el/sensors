@@ -19,16 +19,23 @@ namespace sensors.src.Models.Sensors
         }
 
         // Activates the pulse sensor on the given agent
-        public override bool Activate(Agent agent)
+        public override int Activate(Agent agent)
         {
             if (IsBroken)
             {
                 Console.WriteLine("Pulse sensor is broken and cannot be activated!");
-                return false;
+                return 0; // Return 0 matches if broken
             }
+            
             Console.WriteLine($"Pulse sensor activated - usage {UsageCount + 1}/{MaxUsages}");
+            
+            // First attach the sensor using base implementation
+            int matchCount = base.Activate(agent);
+            
+            // Handle usage tracking
             HandleUsage();
-            return true;
+            
+            return matchCount;
         }
 
         public void BreakSensor()
